@@ -661,11 +661,28 @@ func (cs *MultiClient) handleInboundMessage(ctx context.Context, inreq *proto_se
 	}
 }
 
-func (cs *MultiClient) HandlePeerEvent(_ context.Context, event *proto_sentry.PeerEvent, _ direct.SentryClient) error {
+func (cs *MultiClient) HandlePeerEvent(ctx context.Context, event *proto_sentry.PeerEvent, sentry direct.SentryClient) error {
 	eventID := event.EventId.String()
 	peerID := ConvertH512ToPeerID(event.PeerId)
 	peerIDStr := hex.EncodeToString(peerID[:])
-	log.Debug(fmt.Sprintf("Sentry peer did %s", eventID), "peer", peerIDStr)
+
+	var nodeURL string
+	var clientID string
+	var capabilities []string
+	if event.EventId == proto_sentry.PeerEvent_Connect {
+		reply, err := sentry.PeerById(ctx, &proto_sentry.PeerByIdRequest{PeerId: event.PeerId})
+		if err != nil {
+			log.Debug("sentry.PeerById failed", "err", err)
+		}
+		if (reply != nil) && (reply.Peer != nil) {
+			nodeURL = reply.Peer.Enode
+			clientID = reply.Peer.Name
+			capabilities = reply.Peer.Caps
+		}
+	}
+
+	log.Debug(fmt.Sprintf("Sentry peer did %s", eventID), "peer", peerIDStr,
+		"nodeURL", nodeURL, "clientID", clientID, "capabilities", capabilities)
 	return nil
 }
 
