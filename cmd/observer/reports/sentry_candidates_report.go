@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ledgerwatch/erigon/cmd/observer/database"
+	"github.com/ledgerwatch/erigon/cmd/observer/observer"
 	"net/url"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func CreateSentryCandidatesReport(
 	defer func() {
 		_ = logFile.Close()
 	}()
-	log := NewSentryCandidatesLog(logFile)
+	log := observer.NewSentryCandidatesLog(logFile)
 
 	report := SentryCandidatesReport{}
 
